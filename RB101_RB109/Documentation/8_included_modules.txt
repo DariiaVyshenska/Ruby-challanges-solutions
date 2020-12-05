@@ -1,0 +1,6 @@
+puts a.min(2)
+
+- find Enumerable#min method in core API (I used search box for methods only, 
+here: https://ruby-doc.org/core-2.3.0/index.html#classes)
+- one of possible method useges is min(n) → array
+- if n arguments is given the method returns n minimum arguments, as an array

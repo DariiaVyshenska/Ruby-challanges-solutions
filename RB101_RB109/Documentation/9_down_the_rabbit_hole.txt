@@ -1,0 +1,8 @@
+- go to core ruby API
+- in the seach input yaml
+- one of the top links is to git repo (https://github.com/ruby/yaml)
+- at git repo (and at the second top link at core API too, on the official ruby API for yaml only)
+it states that yaml is an alias for Psych, the YAML engine for Ruby
+- go to Psych documentation (git repo provides a link, it also can be foudn at ruby API through search)
+- find method ::load_file
+- done!

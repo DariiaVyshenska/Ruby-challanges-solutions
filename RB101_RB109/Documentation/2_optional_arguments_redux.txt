@@ -1,0 +1,4 @@
+-4712-01-01 # all are default values for the input parameters of the calss method, except start
+2016-01-01 # only month, date and start parameters are set do default since they are not specified
+2016-05-01 # only date and start parameters are set to default
+2016-05-13 # only start parameter is set to default

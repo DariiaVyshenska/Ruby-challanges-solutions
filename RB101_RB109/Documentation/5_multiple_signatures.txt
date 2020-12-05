@@ -1,0 +1,14 @@
+- Go to Array Core API page, find instance method #fetch
+- According to the API:
+  ~ when we call a.fetch(7), we are trying to access array element with index 7
+  but because our array has elements positioned at indexes 0-4 only, the call will
+  throw an IndexError (there is no element in array a at position 7)
+  ~ when we call a.fetch(7, 'beats me') we provide a default value for non-existent
+  indexes. In our case, again, there is no element at index 7, therefore our
+  output for this call will be a default value which is 'beats me'
+  ~ when we call a.fetch(7) { |index| index**2 }, again, there is no element in 
+  array a at position 7, but we provided a block and this block is called only 
+  if invalid index is referenced (which it is in our case). The block accepts
+  invalid index as a parameter. So the output for this call will be 49 (there is
+  no element with index 7, block is called, and the block output is 7**2=49).
+  

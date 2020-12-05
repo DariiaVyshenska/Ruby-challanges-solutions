@@ -1,0 +1,6 @@
+- Go to core ruby API
+- to to page for Array Class
+- find instance method Array#bsearch
+- according to the documentation, it has two modes. We will be using find-minimum modes
+a = [1, 4, 8, 11, 15, 19]
+puts a.bsearch {|x| x > 8 }

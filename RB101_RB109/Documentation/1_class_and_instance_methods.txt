@@ -1,0 +1,10 @@
+Locate the ruby documentation for methods File::path and File#path:
+  - go to ruby Core API
+  - find class 'File'
+  - on the left side locate both methods (can use quick search)
+How are they different?
+  - File::path is a class method, File#path is an instance method.
+  - The File::path method is called on a class, output is the string 
+  representation of the path
+  - The #path method is called on the object of a class method, output is the 
+  pathname (as a string) used to create this file instance. 

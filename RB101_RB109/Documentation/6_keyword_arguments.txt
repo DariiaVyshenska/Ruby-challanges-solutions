@@ -1,0 +1,10 @@
+- we go to the Core API, Class Numeric, instance method #step
+- the method has four calling signatures. We are using one of them: 
+step(by: step, to: limit) {|i| block } → selfclick to toggle s
+- according to the API, this method invokes the given block on a sequence of
+numbers that start from numer on which #step was called (in our case it is 5). 
+Our sequence goes up to numer 10 and has step 3. In other words, we generate 
+sequence '5 8'. The block is called on each element of this seqience. Therefore,
+we will have the following output:
+5
+8

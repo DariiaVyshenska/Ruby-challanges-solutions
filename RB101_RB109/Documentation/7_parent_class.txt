@@ -1,0 +1,7 @@
+- find #public_methods in Object Class Core API (go to Core API, in the 
+search bar for methods only you can easily locate this method without the 
+need to go over all possible Classes)
+- API specifies that this method has parameter all set to be true as default. 
+- if we set all to false, only the methods in the receiver will be listed.
+- therefore we need to modify our code the following way:
+puts s.public_methods(all=false).inspect

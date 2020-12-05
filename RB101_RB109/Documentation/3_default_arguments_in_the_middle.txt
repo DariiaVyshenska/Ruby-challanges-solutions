@@ -1,0 +1,10 @@
+It prints out:
+[4, 5, 3, 6]
+
+We can find explanation to what happens on the page for syntax, calling methods.
+What happens here is the following:
+- the method has 4 arguments, seconod and third have default values (b=2 and c=3);
+- we pass three numbers to the method (4, 5, 6);
+- first passed argument fills in first method's argument without default (a=4);
+- last passed argument fills in last method's argument that is also not set to default (d=6);
+- we have one passed argument left, so it will replace first default method's argument (5 replaces 2 -> now b=5)
