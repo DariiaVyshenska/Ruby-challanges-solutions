@@ -6,6 +6,7 @@
 # p penultimate('Launch School is great!') == 'is'
 
 EVEN_WNUM_MSG = 'No middle word - sentence contains even number of words!'
+
 def penultimate2(str)
   if !(str.is_a? String) || str.split.empty?
     nil
