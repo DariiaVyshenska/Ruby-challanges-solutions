@@ -1,0 +1,57 @@
+1.
+createdb animals # from command line
+or
+CREATE DATABASE animals; # from psql
+
+2.
+CREATE TABLE birds(
+id serial PRIMARY KEY,
+name varchar(25),
+age INT,
+species varchar(15)
+);
+
+3.
+INSERT INTO birds (name, age, species)
+VALUES
+('Charlie', 3, 'Finch'),
+('Allie', 5, 'Owl'),
+('Jennifer', 3, 'Magpie'),
+('Jamie', 4, 'Owl'),
+('Roy', 8, 'Crow');
+
+4.
+SELECT * FROM birds;
+
+5.
+SELECT * FROM birds WHERE age < 5;
+
+6.
+UPDATE birds SET species = 'Raven' WHERE id = 5 AND name = 'Roy';
+
+animals=# UPDATE birds
+animals-# SET species = 'Hawk'
+animals-# WHERE id = 4 AND name = 'Jamie';
+
+7.
+DELETE FROM birds WHERE age = 3 AND species = 'Finch';
+
+8.
+AALTER TABLE birds ADD CONSTRAINT birds_age_check CHECK(age > 0);
+to ckeck if it worked:
+\d birds
+or
+animals=# INSERT INTO birds (name, age, species)
+animals-# VALUES ('xxx', -1, 'hawk');
+ERROR:  new row for relation "birds" violates check constraint "birds_age_check"
+DETAIL:  Failing row contains (6, xxx, -1, hawk).
+
+9.
+DROP TABLE birds;
+
+10.
+\c other_db
+DROP DATABASE animals;
+
+or from command line:
+dropdb animals
