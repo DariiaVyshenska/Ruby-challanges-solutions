@@ -1,0 +1,35 @@
+1.
+Data Definition Language (DDL) - language used to define and manipulate the
+schema (the structure of the database, relations and tables within it).
+Examples: CREATE, DROP, ALTER
+Data Manipulation Language (DML) - language used to retrieve and modify the data
+stored within a database.
+Examples: SELECT, UPDATE, INSERT, DELETE
+
+2.
+DML
+
+3.
+DDL
+
+4.
+DDL
+
+5.
+DML
+
+6.
+DML
+
+7.
+neither
+(meta-command, console command)
+
+8.
+DML
+
+9.
+DDL
+
+10.
+DDL
