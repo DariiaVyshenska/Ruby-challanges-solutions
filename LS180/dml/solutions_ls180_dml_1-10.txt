@@ -1,0 +1,80 @@
+1.
+CREATE DATABASE workshop;
+\c workshop
+CREATE TABLE devices(
+  id serial PRIMARY KEY,
+  name text NOT NULL,
+  created_at timestamp DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE parts(
+  id serial PRIMARY KEY,
+  part_number INT UNIQUE NOT NULL,
+  device_id INT REFERENCES devices(id)
+);
+
+2.
+INSERT INTO devices (name)
+VALUES ('Accelerometer'),
+       ('Gyroscope');
+
+INSERT INTO parts (part_number, device_id)
+VALUES (11, 1),
+       (12, 1),
+       (13, 1),
+       (21, 2),
+       (22, 2),
+       (23, 2),
+       (24, 2),
+       (25, 2),
+       (1, DEFAULT),
+       (2, DEFAULT),
+       (3, DEFAULT);
+
+3.
+SELECT devices.name, parts.part_number
+FROM devices JOIN parts
+ON devices.id = parts.device_id;
+
+4.
+SELECT * FROM parts WHERE part_number::text LIKE '3%';
+
+5.
+SELECT devices.name, count(parts.id)
+FROM devices LEFT JOIN parts
+ON devices.id = parts.device_id
+GROUP BY devices.name;
+
+6.
+SELECT devices.name, count(parts.id)
+FROM devices LEFT JOIN parts
+ON devices.id = parts.device_id
+GROUP BY devices.name
+ORDER BY name DESC;
+
+7.
+SELECT part_number, device_id FROM parts
+WHERE device_id IS NOT NULL;
+SELECT part_number, device_id FROM parts
+WHERE device_id IS NULL;
+
+8.
+SELECT name FROM devices ORDER BY created_at DESC LIMIT 1;
+
+9.
+UPDATE parts
+SET device_id = 1
+WHERE id = 7 OR id = 8;
+# further exploration
+
+UPDATE parts
+SET device_id = 1
+WHERE part_number IN (SELECT min(parts.part_number) FROM devices JOIN parts
+    ON devices.id = parts.device_id
+    WHERE devices.name = 'Gyroscope');
+
+10.
+DELETE FROM parts WHERE device_id IN (SELECT id FROM devices WHERE name = 'Accelerometer');
+DELETE FROM devices WHERE name = 'Accelerometer';
+# further exploration:
+that would be easier if we specified 'ON DELETE CASCADE' when defining
+foreign key column;
