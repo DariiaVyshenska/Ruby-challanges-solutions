@@ -1,0 +1,141 @@
+1.
+createdb auction
+psql auction
+
+CREATE TABLE bidders(
+  id serial PRIMARY KEY,
+  name text NOT NULL
+);
+
+CREATE TABLE items(
+  id serial PRIMARY KEY,
+  name text NOT NULL,
+  initial_price decimal(6,2) NOT NULL CHECK(initial_price BETWEEN 0.01 AND 1000.00),
+  sales_price decimal(6, 2) CHECK(sales_price BETWEEN 0.01 AND 1000.00)
+);
+
+CREATE TABLE bids(
+  id serial PRIMARY KEY,
+  bidder_id INT NOT NULL REFERENCES bidders(id) ON DELETE CASCADE,
+  item_id INT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+  amount decimal(6,2) NOT NULL CHECK(amount BETWEEN 0.01 AND 1000.00)
+);
+CREATE INDEX ON bids(bidder_id, item_id);
+
+\copy bidders FROM 'bidders.csv' WITH (FORMAT CSV, HEADER true)
+\copy items FROM 'items.csv' WITH (FORMAT CSV, HEADER true)
+\copy bids FROM 'bids.csv' WITH (FORMAT CSV, HEADER true)
+
+2.
+SELECT name AS "Bid on Items" FROM items
+WHERE id IN (SELECT DISTINCT item_id FROM bids);
+
+3.
+SELECT name AS "Not Bid On" FROM items
+WHERE id NOT IN (SELECT DISTINCT item_id FROM bids);
+
+4.
+SELECT name FROM bidders
+WHERE EXISTS (SELECT 1 FROM bids WHERE bids.bidder_id = bidders.id);
+
+# further exploration
+SELECT DISTINCT name FROM bidders JOIN bids ON bids.bidder_id = bidders.id;
+
+5.
+SELECT max(count) FROM (SELECT count(item_id) FROM bids GROUP BY item_id) AS bids_count;
+
+6.
+SELECT name,(SELECT count(item_id) FROM bids WHERE bids.item_id = items.id) FROM items;
+
+# further exploration
+SELECT name, count(item_id)
+FROM items LEFT JOIN bids ON bids.item_id = items.id
+GROUP BY name;
+
+7.
+SELECT items.id FROM items WHERE ROW(name, initial_price, sales_price) = ROW('Painting', 100.00, 250.00);
+
+8.
+When we use explain we can get statistics information for a query we are interested in.
+To do so we call
+EXPLAIN our_query_of_interest;
+
+The difference between running EXPLAIN vs EXPLAIN ANALYZE is that in the first
+case the query is not run and the cost of running it is an estimate, when in the
+second case it is actually run and we can see the real cost (actual cost) of
+running the query.
+In our particular case, the theoretical cost was 33.38..66.47 and the
+actual was 0.347..0.405. The first number is the start up cost, the second is
+the total cost (estimated or actual). The units for theoretical cost are arbitrary but
+they are comparable between each other. the total actual cost units are in ms.
+Also, there is info about theoretical output rows and actual (635 and 6)
+We also can see a more info about cost and output rows for each
+operation required to run the full query (a node).
+
+auction=# EXPLAIN SELECT name FROM bidders
+auction-# WHERE EXISTS (SELECT 1 FROM bids WHERE bids.bidder_id = bidders.id);
+                                QUERY PLAN
+--------------------------------------------------------------------------
+ Hash Join  (cost=33.38..66.47 rows=635 width=32)
+   Hash Cond: (bidders.id = bids.bidder_id)
+   ->  Seq Scan on bidders  (cost=0.00..22.70 rows=1270 width=36)
+   ->  Hash  (cost=30.88..30.88 rows=200 width=4)
+         ->  HashAggregate  (cost=28.88..30.88 rows=200 width=4)
+               Group Key: bids.bidder_id
+               ->  Seq Scan on bids  (cost=0.00..25.10 rows=1510 width=4)
+(7 rows)
+
+#===
+auction=# EXPLAIN ANALYZE SELECT name FROM bidders
+WHERE EXISTS (SELECT 1 FROM bids WHERE bids.bidder_id = bidders.id);
+                                                     QUERY PLAN
+---------------------------------------------------------------------------------------------------------------------
+ Hash Join  (cost=33.38..66.47 rows=635 width=32) (actual time=0.347..0.405 rows=6 loops=1)
+   Hash Cond: (bidders.id = bids.bidder_id)
+   ->  Seq Scan on bidders  (cost=0.00..22.70 rows=1270 width=36) (actual time=0.014..0.030 rows=7 loops=1)
+   ->  Hash  (cost=30.88..30.88 rows=200 width=4) (actual time=0.315..0.324 rows=6 loops=1)
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         ->  HashAggregate  (cost=28.88..30.88 rows=200 width=4) (actual time=0.170..0.300 rows=6 loops=1)
+               Group Key: bids.bidder_id
+               ->  Seq Scan on bids  (cost=0.00..25.10 rows=1510 width=4) (actual time=0.010..0.060 rows=26 loops=1)
+ Planning Time: 0.264 ms
+ Execution Time: 0.489 ms
+(10 rows)
+
+9.
+I'm using opstgresql v12.9. Here are some observations:
+1. the output of EXPLAIN ANALYZE, in particular - the exact time estimates
+very from one call to another even though the calls are identical. I also observe
+different numbers than in the example.
+After some reading I found the explanation for this - "ANALYZE's statistics
+are random samples rather than exact, and because costs are inherently somewhat
+platform-dependent."
+2. It seems like there is some reusing of data between the calls to EXPLAIN
+ANALYZE - when I connect to the db and run two queries, the second query runs
+faster than if runs would if I run it first (I did two different independent
+connections to the same database and run two queries in different order. same
+query always had higher cost and time stats if it was run first compared to when
+it was run second). I did not find information about it in the documentation.
+3. Here are some stat numbers and conclusions - each time I run the query
+as the first query after a fresh connect to the db:
+------------------------------------------------------------------------
+QUERY            | planning time | exec time | total time | total cost |
+------------------------------------------------------------------------
+subquery         |     0.490     |   0.327   |   0.140    |    37.16   |
+order by & limit |     0.390     |   0.293   |   0.170    |    35.65   |
+------------------------------------------------------------------------
+From the results generated it seems like the query plan for order by & limit is
+a bit faster than for subquery call judging from actual time (ms) of execution (both
+planning and execution time measurements are smaller for order by & limit).
+However, total time is a bit smaller for subquery compared to the order by & limit.
+All these statistics do change from one call to EXPLAIN ANALYZE to another
+due to reasons explained in p.1
+However, the estimated cost (absolute units) for each query plan remains constant and shows
+that estimated cost for order by & limit is smaller.
+It's worth mentioning that we have a small data set and our differences between
+the speed of different queries are tiny. But we can not extrapolate these numbers
+to the larger data set because it's very possible for the psql to choose another
+query plan when there is more data (amount of data queried is a parameter that
+is taken into account when the query plan is decided upon).
+Further exploration: all metrics for scalar sub-query were larger (especially
+the total cost) than any of the tested queries.
